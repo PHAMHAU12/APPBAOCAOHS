@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BÁO CÁO NỀ NẾP LỚP - PHẠM HẬU</title>
+  <meta name="description" content="Ứng dụng báo cáo học sinh vắng học, vi phạm nội quy và gửi thông báo trực tiếp qua Zalo Giáo viên chủ nhiệm.">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Be Vietnam Pro -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Be Vietnam Pro', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Be Vietnam Pro', sans-serif; }
+    .badge-chip { transition: all 0.15s ease-in-out; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen pb-12">
+
+  <!-- TOP HEADER -->
+  <header class="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 text-white shadow-md sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center text-xl shadow-inner border border-white/20">
+          📋
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold tracking-tight leading-tight">
+            BÁO CÁO NỀ NẾP LỚP - PHẠM HẬU
+          </h1>
+          <p class="text-xs text-blue-100 flex items-center gap-1.5 font-medium">
+            <span id="headerSchoolClass">Đang tải...</span>
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span id="headerTeacher">GVCN: Đang tải...</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="toggleConfigModal(true)" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white/15 hover:bg-white/25 active:scale-95 text-white rounded-lg backdrop-blur transition border border-white/20">
+          ⚙️ Cấu hình lớp
+        </button>
+        <button onclick="toggleHistoryModal(true)" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white text-blue-700 hover:bg-blue-50 active:scale-95 rounded-lg shadow-sm transition">
+          📜 Lịch sử (<span id="historyCount">0</span>)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-6xl mx-auto px-4 pt-5 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- LEFT COLUMN: REPORT FORM -->
+    <div class="lg:col-span-7 space-y-5">
+
+      <!-- 1. THỜI GIAN & TIẾT HỌC -->
+      <section class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/80">
+        <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+          <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+            <span class="w-2 h-4 rounded-full bg-blue-600"></span>
+            1. Thời gian & Tiết học
+          </h2>
+          <span class="text-xs text-slate-500 font-medium" id="todayHumanDate">Hôm nay</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Ngày ghi nhận</label>
+            <input type="date" id="reportDate" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Tiết học</label>
+            <select id="reportPeriod" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+              <option value="Tiết 1">Tiết 1</option>
+              <option value="Tiết 2">Tiết 2</option>
+              <option value="Tiết 3">Tiết 3</option>
+              <option value="Tiết 4">Tiết 4</option>
+              <option value="Tiết 5">Tiết 5</option>
+              <option value="Buổi sáng">Buổi sáng</option>
+              <option value="Buổi chiều">Buổi chiều</option>
+              <option value="Cả ngày">Cả ngày</option>
+            </select>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-semibold text-slate-600">Môn học (Tùy chọn)</label>
+              <button type="button" onclick="clearSubject()" class="text-[11px] text-slate-400 hover:text-rose-600 font-medium">Xóa</button>
+            </div>
+            <input type="text" id="reportSubject" placeholder="Chọn môn hoặc gõ..." list="popularSubjectsList" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+            <datalist id="popularSubjectsList"></datalist>
+          </div>
+        </div>
+
+        <!-- Quick subject chips -->
+        <div class="mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap gap-1.5 items-center">
+          <span class="text-[11px] text-slate-500 font-semibold mr-1">Môn học nhanh:</span>
+          <div id="quickSubjectsContainer" class="flex flex-wrap gap-1.5"></div>
+        </div>
+      </section>
+
+      <!-- 2. PHÂN LOẠI BÁO CÁO -->
+      <section class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/80">
+        <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
+          <span class="w-2 h-4 rounded-full bg-blue-600"></span>
+          2. Loại báo cáo
+        </h2>
+
+        <!-- TABS -->
+        <div class="grid grid-cols-2 gap-2 mb-4">
+          <button type="button" id="tabAbsentBtn" onclick="switchReportType('ABSENT')" class="py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 border transition-all bg-red-50 text-red-700 border-red-300 shadow-sm">
+            <span>🔴</span> Vắng học
+          </button>
+          <button type="button" id="tabViolationBtn" onclick="switchReportType('VIOLATION')" class="py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 border transition-all bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100">
+            <span>⚠️</span> Vi phạm nội quy
+          </button>
+        </div>
+
+        <!-- CONDITIONAL 2A: VẮNG HỌC -->
+        <div id="absentOptionsBlock" class="space-y-2">
+          <label class="block text-xs font-semibold text-slate-600">Lý do vắng:</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button type="button" onclick="setAbsentSubtype('EXCUSED')" id="absentBtn_EXCUSED" class="p-2.5 rounded-xl border text-xs font-bold text-center transition bg-emerald-50 text-emerald-700 border-emerald-300 ring-2 ring-emerald-500">
+              🟢 Có phép
+            </button>
+            <button type="button" onclick="setAbsentSubtype('UNEXCUSED')" id="absentBtn_UNEXCUSED" class="p-2.5 rounded-xl border text-xs font-bold text-center transition bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100">
+              🔴 Không phép
+            </button>
+            <button type="button" onclick="setAbsentSubtype('LATE')" id="absentBtn_LATE" class="p-2.5 rounded-xl border text-xs font-bold text-center transition bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100">
+              ⏱️ Đến muộn
+            </button>
+            <button type="button" onclick="setAbsentSubtype('TRUANT')" id="absentBtn_TRUANT" class="p-2.5 rounded-xl border text-xs font-bold text-center transition bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100">
+              🏃 Trốn tiết
+            </button>
+          </div>
+        </div>
+
+        <!-- CONDITIONAL 2B: VI PHẠM NỘI QUY -->
+        <div id="violationOptionsBlock" class="hidden space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-semibold text-slate-600">Chọn nhanh lỗi thường gặp (chạm để chọn/bỏ):</label>
+            <button type="button" onclick="clearViolationTags()" class="text-xs text-slate-400 hover:text-slate-600 underline">Bỏ chọn hết</button>
+          </div>
+          <div id="violationTagsContainer" class="flex flex-wrap gap-1.5">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- GHI CHÚ BỔ SUNG -->
+        <div class="mt-3.5">
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Ghi chú cụ thể / Lỗi khác (nếu có):</label>
+          <input type="text" id="customNoteInput" placeholder="Ví dụ: Kiểm tra 15 phút bài trống, ngồi bàn cuối không tập trung..." class="w-full text-sm px-3.5 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+      </section>
+
+      <!-- 3. CHỌN HỌC SINH -->
+      <section class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/80">
+        <div class="flex items-center justify-between mb-2 border-b border-slate-100 pb-2">
+          <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+            <span class="w-2 h-4 rounded-full bg-blue-600"></span>
+            3. Chọn học sinh
+            <span class="text-xs font-normal text-slate-500">(Đã chọn: <span id="selectedCountBadge" class="font-bold text-blue-600">0</span>)</span>
+          </h2>
+          <div class="flex gap-2">
+            <button type="button" onclick="clearSelectedStudents()" class="text-xs text-red-500 hover:text-red-700 font-medium">Bỏ chọn tất cả</button>
+          </div>
+        </div>
+
+        <!-- Selected Pills -->
+        <div id="selectedPillsList" class="flex flex-wrap gap-1.5 min-h-[38px] p-2 bg-slate-50 rounded-xl border border-slate-200/80 mb-3 items-center">
+          <span class="text-xs text-slate-400 italic">Chưa chọn học sinh nào bên dưới...</span>
+        </div>
+
+        <!-- Search Student -->
+        <div class="relative mb-2">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">🔍</span>
+          <input type="text" id="searchStudentInput" placeholder="Tìm kiếm nhanh theo Tên hoặc Số thứ tự..." class="w-full text-sm pl-9 pr-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+
+        <!-- Student Grid List -->
+        <div id="studentGridList" class="max-h-56 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-1.5 p-1 border border-slate-100 rounded-xl bg-slate-50/50">
+          <!-- Rendered by JS -->
+        </div>
+      </section>
+
+    </div>
+
+    <!-- RIGHT COLUMN: PREVIEW & SEND -->
+    <div class="lg:col-span-5 space-y-5">
+
+      <section class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/80 sticky top-20">
+        <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+          <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            Xem trước tin nhắn Zalo
+          </h2>
+          <span class="text-xs text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full font-semibold">
+            Tự động cập nhật
+          </span>
+        </div>
+
+        <!-- Simulated Zalo Bubble -->
+        <div class="bg-gradient-to-b from-blue-50/60 to-slate-50 border border-blue-100 rounded-xl p-3.5 shadow-inner">
+          <div class="flex items-center gap-2 mb-2 pb-2 border-b border-blue-200/50 text-xs text-blue-900 font-semibold">
+            <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">Z</span>
+            <span>Gửi tới: <span id="previewTeacherPhone" class="font-bold text-blue-700">Chưa cấu hình</span></span>
+          </div>
+          <pre id="messagePreviewArea" class="whitespace-pre-wrap font-sans text-xs text-slate-800 leading-relaxed max-h-[360px] overflow-y-auto select-all bg-white/80 p-3 rounded-lg border border-blue-100/80">
+Đang chuẩn bị báo cáo...
+          </pre>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="mt-4 space-y-2.5">
+          <button type="button" onclick="sendToZalo()" class="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 transition cursor-pointer">
+            <span class="text-lg">🚀</span> Gửi báo cáo qua Zalo
+          </button>
+
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="copyMessageText()" class="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 transition border border-slate-200">
+              <span>📋</span> Sao chép nội dung
+            </button>
+            <button type="button" onclick="saveAndReset()" class="py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 active:scale-95 font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 transition border border-emerald-200">
+              <span>💾</span> Lưu & Nhập mới
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick tips -->
+        <div class="mt-3 p-2.5 bg-amber-50 rounded-xl border border-amber-200/70 text-[11px] text-amber-800 leading-normal flex gap-2">
+          <span>💡</span>
+          <div>
+            <strong>Mẹo:</strong> Bấm <em>"Gửi qua Zalo"</em> sẽ tự động sao chép sẵn nội dung và mở hộp thoại Zalo với GVCN. Bạn chỉ cần nhấn Gửi (Enter) là hoàn tất!
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <!-- MODAL: CẤU HÌNH LỚP HỌC -->
+  <div id="configModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border border-slate-200">
+      <div class="p-4 sm:p-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <span>⚙️</span> Cấu hình thông tin lớp học & Danh sách
+        </h3>
+        <button onclick="toggleConfigModal(false)" class="text-white/80 hover:text-white text-xl font-bold p-1">✕</button>
+      </div>
+
+      <div class="p-4 sm:p-5 overflow-y-auto space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Tên trường học *</label>
+            <input type="text" id="cfgSchool" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Ví dụ: THPT Chu Văn An">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Tên lớp học *</label>
+            <input type="text" id="cfgClass" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Ví dụ: 11A1">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Giáo viên chủ nhiệm *</label>
+            <input type="text" id="cfgTeacher" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Ví dụ: Thầy Phạm Hậu">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Số Zalo / SĐT GVCN *</label>
+            <input type="text" id="cfgPhone" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Ví dụ: 0988123456">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Họ tên người báo cáo</label>
+            <input type="text" id="cfgReporter" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Ví dụ: Nguyễn Minh Tuấn">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Vai trò người báo cáo</label>
+            <input type="text" id="cfgRole" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Ví dụ: Lớp trưởng, Cờ đỏ...">
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-bold text-slate-700">
+              Danh sách học sinh (Mỗi học sinh 1 dòng)
+            </label>
+            <button type="button" onclick="loadSampleRoster()" class="text-xs text-blue-600 hover:underline">
+              Khôi phục 35 học sinh mẫu
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-500 mb-1.5">Bạn có thể dán danh sách họ tên từ Word/Excel. Hệ thống sẽ tự động đánh số thứ tự từ 1 đến hết.</p>
+          <textarea id="cfgStudentsText" rows="7" class="w-full text-xs font-mono p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="1. Nguyễn An Bình&#10;2. Trần Gia Bảo&#10;3. Lê Phương Chi..."></textarea>
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+        <button onclick="toggleConfigModal(false)" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200 rounded-xl transition">
+          Hủy bỏ
+        </button>
+        <button onclick="saveConfigFromModal()" class="px-4 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow transition">
+          Lưu cấu hình
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: LỊCH SỬ BÁO CÁO -->
+  <div id="historyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border border-slate-200">
+      <div class="p-4 sm:p-5 bg-gradient-to-r from-slate-800 to-slate-900 text-white flex items-center justify-between">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <span>📜</span> Lịch sử báo cáo đã ghi nhận
+        </h3>
+        <button onclick="toggleHistoryModal(false)" class="text-white/80 hover:text-white text-xl font-bold p-1">✕</button>
+      </div>
+
+      <div class="p-4 overflow-y-auto space-y-3 flex-1" id="historyListContainer">
+        <!-- Rendered by JS -->
+      </div>
+
+      <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+        <button onclick="clearHistory()" class="text-xs text-red-600 hover:underline font-semibold">
+          Xóa toàn bộ lịch sử
+        </button>
+        <button onclick="toggleHistoryModal(false)" class="px-4 py-2 text-xs font-bold bg-slate-700 text-white hover:bg-slate-800 rounded-xl transition">
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 max-w-sm pointer-events-none">
+    <div class="bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 border border-slate-700">
+      <span id="toastIcon">✅</span>
+      <span id="toastMsg" class="font-medium">Thông báo</span>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // 1. DATA CONSTANTS & STORAGE
+    const DEFAULT_CONFIG = {
+      schoolName: 'THPT Chu Văn An',
+      className: '11A1',
+      teacherName: 'Thầy Phạm Hậu',
+      zaloPhone: '0988123456',
+      reporterName: 'Nguyễn Minh Tuấn',
+      reporterRole: 'Lớp trưởng',
+      students: [
+        'Nguyễn An Bình', 'Trần Gia Bảo', 'Lê Phương Chi', 'Phạm Tiến Dũng', 'Hoàng Thùy Dương',
+        'Vũ Đình Đạt', 'Đặng Thúy Hằng', 'Bùi Minh Hiếu', 'Đỗ Khánh Huyền', 'Hồ Gia Huy',
+        'Ngô Tuấn Kiệt', 'Dương Nhật Linh', 'Lý Hoàng Long', 'Mai Trúc Mai', 'Đinh Văn Nam',
+        'Trịnh Thị Nga', 'Phan Thanh Phong', 'Võ Như Quỳnh', 'Lâm Quốc Sơn', 'Đào Bích Thảo',
+        'Trương Anh Thư', 'Cao Minh Trí', 'Lương Cẩm Tú', 'Tô Văn Tùng', 'Nguyễn Khắc Việt',
+        'Hà Bảo Yến', 'Nguyễn Trung Dũng', 'Lê Thị Hương', 'Trần Đức Minh', 'Phạm Quốc Khánh',
+        'Vũ Hoài An', 'Nguyễn Thu Trang', 'Hoàng Minh Quân', 'Đặng Ngọc Ánh', 'Bùi Quang Vinh'
+      ].map((name, i) => ({ id: 'std-' + (i + 1), stt: i + 1, name }))
+    };
+
+    const COMMON_VIOLATIONS = [
+      'Không thuộc bài cũ',
+      'Không làm bài tập về nhà',
+      'Đi học muộn / Vào lớp trễ',
+      'Nói chuyện riêng / Mất trật tự',
+      'Không mặc đồng phục / Thiếu phù hiệu',
+      'Sử dụng điện thoại trong giờ học',
+      'Ăn quà vặt trong lớp',
+      'Ngủ gật trong giờ',
+      'Không mang sách vở / Dụng cụ học tập',
+      'Bỏ tiết / Trốn học giữa giờ',
+      'Làm việc riêng trong giờ học',
+      'Không sơ vin / Quần áo chưa chỉnh tề'
+    ];
+
+    const POPULAR_SUBJECTS = [
+      'Toán',
+      'Ngữ văn',
+      'Tiếng Anh',
+      'Vật lý',
+      'Hóa học',
+      'Sinh học',
+      'Lịch sử',
+      'Địa lý',
+      'Tin học',
+      'KTPL',
+      'GDQP',
+      'CNNN',
+      'CNCN',
+      'GDĐP',
+      'HĐTN',
+      'Thể dục',
+      'SH Lớp'
+    ];
+
+    // State
+    let appConfig = loadConfig();
+    let currentReportType = 'ABSENT'; // 'ABSENT' | 'VIOLATION'
+    let currentAbsentSubtype = 'EXCUSED'; // 'EXCUSED' | 'UNEXCUSED' | 'LATE' | 'TRUANT'
+    let selectedViolationTags = [];
+    let selectedStudentIds = new Set();
+    let historyRecords = loadHistory();
+
+    // Helpers for Storage
+    function loadConfig() {
+      try {
+        const saved = localStorage.getItem('school_zalo_config');
+        if (saved) return JSON.parse(saved);
+      } catch (e) {}
+      return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+    }
+
+    function saveConfig(cfg) {
+      appConfig = cfg;
+      localStorage.setItem('school_zalo_config', JSON.stringify(cfg));
+      updateHeaderInfo();
+      renderStudents();
+      updatePreview();
+    }
+
+    function loadHistory() {
+      try {
+        const saved = localStorage.getItem('school_zalo_history');
+        if (saved) return JSON.parse(saved);
+      } catch (e) {}
+      return [];
+    }
+
+    function saveHistoryRecords(list) {
+      historyRecords = list;
+      localStorage.setItem('school_zalo_history', JSON.stringify(list));
+      document.getElementById('historyCount').innerText = list.length;
+    }
+
+    // Vietnamese accent removal for search
+    function removeVietnameseTones(str) {
+      let s = (str || '').toLowerCase();
+      s = s.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');
+      s = s.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, 'e');
+      s = s.replace(/ì|í|ị|ỉ|ĩ/g, 'i');
+      s = s.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, 'o');
+      s = s.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u');
+      s = s.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y');
+      s = s.replace(/đ/g, 'd');
+      return s;
+    }
+
+    function cleanPhone(phone) {
+      if (!phone) return '';
+      let c = phone.replace(/[^0-9+]/g, '');
+      if (c.startsWith('+84')) c = '0' + c.substring(3);
+      else if (c.startsWith('84') && c.length >= 11) c = '0' + c.substring(2);
+      return c;
+    }
+
+    function renderPopularSubjects() {
+      const datalist = document.getElementById('popularSubjectsList');
+      const container = document.getElementById('quickSubjectsContainer');
+      const currentSubject = document.getElementById('reportSubject').value.trim();
+
+      if (datalist) {
+        datalist.innerHTML = POPULAR_SUBJECTS.map(s => `<option value="${s}"></option>`).join('');
+      }
+
+      if (container) {
+        container.innerHTML = '';
+        POPULAR_SUBJECTS.forEach(s => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          const isSelected = currentSubject === s;
+          btn.className = `text-xs px-2.5 py-1 rounded-lg border font-medium transition cursor-pointer ${
+            isSelected
+              ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-xs'
+              : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700'
+          }`;
+          btn.innerText = s;
+          btn.onclick = () => {
+            const input = document.getElementById('reportSubject');
+            if (input.value === s) {
+              input.value = '';
+            } else {
+              input.value = s;
+            }
+            renderPopularSubjects();
+            updatePreview();
+          };
+          container.appendChild(btn);
+        });
+      }
+    }
+
+    function clearSubject() {
+      const input = document.getElementById('reportSubject');
+      input.value = '';
+      renderPopularSubjects();
+      updatePreview();
+    }
+
+    // Initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      // Set today's date
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      document.getElementById('reportDate').value = `${yyyy}-${mm}-${dd}`;
+      document.getElementById('todayHumanDate').innerText = `Ngày ${dd}/${mm}/${yyyy}`;
+
+      updateHeaderInfo();
+      renderPopularSubjects();
+      renderViolationChips();
+      renderStudents();
+      updatePreview();
+      document.getElementById('historyCount').innerText = historyRecords.length;
+
+      // Event listeners
+      document.getElementById('reportDate').addEventListener('change', updatePreview);
+      document.getElementById('reportPeriod').addEventListener('change', updatePreview);
+      document.getElementById('reportSubject').addEventListener('input', () => {
+        renderPopularSubjects();
+        updatePreview();
+      });
+      document.getElementById('customNoteInput').addEventListener('input', updatePreview);
+      document.getElementById('searchStudentInput').addEventListener('input', () => renderStudents());
+    });
+
+    function updateHeaderInfo() {
+      document.getElementById('headerSchoolClass').innerText = `${appConfig.schoolName || 'Chưa đặt trường'} - Lớp ${appConfig.className || '...'}`;
+      document.getElementById('headerTeacher').innerText = `GVCN: ${appConfig.teacherName || 'Chưa đặt'}`;
+      document.getElementById('previewTeacherPhone').innerText = `${appConfig.teacherName || 'GVCN'} (${appConfig.zaloPhone || 'Chưa nhập SĐT'})`;
+    }
+
+    // Switch between Vắng học vs Vi phạm
+    function switchReportType(type) {
+      currentReportType = type;
+      const tabAbsentBtn = document.getElementById('tabAbsentBtn');
+      const tabViolationBtn = document.getElementById('tabViolationBtn');
+      const absentBlock = document.getElementById('absentOptionsBlock');
+      const violationBlock = document.getElementById('violationOptionsBlock');
+
+      if (type === 'ABSENT') {
+        tabAbsentBtn.className = 'py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 border transition-all bg-red-50 text-red-700 border-red-300 shadow-sm';
+        tabViolationBtn.className = 'py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 border transition-all bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100';
+        absentBlock.classList.remove('hidden');
+        violationBlock.classList.add('hidden');
+      } else {
+        tabAbsentBtn.className = 'py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 border transition-all bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100';
+        tabViolationBtn.className = 'py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 border transition-all bg-amber-50 text-amber-800 border-amber-300 shadow-sm';
+        absentBlock.classList.add('hidden');
+        violationBlock.classList.remove('hidden');
+      }
+      updatePreview();
+    }
+
+    function setAbsentSubtype(sub) {
+      currentAbsentSubtype = sub;
+      const keys = ['EXCUSED', 'UNEXCUSED', 'LATE', 'TRUANT'];
+      keys.forEach(k => {
+        const btn = document.getElementById(`absentBtn_${k}`);
+        if (!btn) return;
+        if (k === sub) {
+          btn.className = 'p-2.5 rounded-xl border text-xs font-bold text-center transition bg-emerald-50 text-emerald-700 border-emerald-300 ring-2 ring-emerald-500';
+        } else {
+          btn.className = 'p-2.5 rounded-xl border text-xs font-bold text-center transition bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100';
+        }
+      });
+      updatePreview();
+    }
+
+    function renderViolationChips() {
+      const container = document.getElementById('violationTagsContainer');
+      container.innerHTML = '';
+      COMMON_VIOLATIONS.forEach(tag => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const isSelected = selectedViolationTags.includes(tag);
+        btn.className = `badge-chip text-xs px-2.5 py-1.5 rounded-lg border font-medium cursor-pointer ${
+          isSelected 
+            ? 'bg-amber-500 text-white border-amber-600 shadow-sm font-semibold' 
+            : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+        }`;
+        btn.innerText = tag;
+        btn.onclick = () => {
+          if (selectedViolationTags.includes(tag)) {
+            selectedViolationTags = selectedViolationTags.filter(t => t !== tag);
+          } else {
+            selectedViolationTags.push(tag);
+          }
+          renderViolationChips();
+          updatePreview();
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function clearViolationTags() {
+      selectedViolationTags = [];
+      renderViolationChips();
+      updatePreview();
+    }
+
+    // Render Student Grid
+    function renderStudents() {
+      const query = removeVietnameseTones(document.getElementById('searchStudentInput').value.trim());
+      const container = document.getElementById('studentGridList');
+      container.innerHTML = '';
+
+      const filtered = appConfig.students.filter(s => {
+        if (!query) return true;
+        const nameClean = removeVietnameseTones(s.name);
+        const sttStr = String(s.stt);
+        return nameClean.includes(query) || sttStr.includes(query);
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="col-span-full py-4 text-center text-xs text-slate-400">Không tìm thấy học sinh nào phù hợp</div>';
+      } else {
+        filtered.forEach(s => {
+          const isSelected = selectedStudentIds.has(s.id);
+          const item = document.createElement('div');
+          item.className = `flex items-center gap-2 p-2 rounded-xl border cursor-pointer select-none transition ${
+            isSelected
+              ? 'bg-blue-50 border-blue-400 text-blue-900 font-bold shadow-xs'
+              : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+          }`;
+          item.onclick = () => toggleSelectStudent(s.id);
+
+          item.innerHTML = `
+            <div class="w-5 h-5 rounded flex items-center justify-center text-xs ${
+              isSelected ? 'bg-blue-600 text-white' : 'border border-slate-300 text-transparent'
+            }">✓</div>
+            <span class="text-[11px] text-slate-400 font-mono w-5">#${s.stt}</span>
+            <span class="text-xs truncate">${s.name}</span>
+          `;
+          container.appendChild(item);
+        });
+      }
+
+      renderSelectedPills();
+    }
+
+    function toggleSelectStudent(id) {
+      if (selectedStudentIds.has(id)) {
+        selectedStudentIds.delete(id);
+      } else {
+        selectedStudentIds.add(id);
+      }
+      renderStudents();
+      updatePreview();
+    }
+
+    function clearSelectedStudents() {
+      selectedStudentIds.clear();
+      renderStudents();
+      updatePreview();
+    }
+
+    function renderSelectedPills() {
+      const pillsContainer = document.getElementById('selectedPillsList');
+      const badgeCount = document.getElementById('selectedCountBadge');
+      badgeCount.innerText = selectedStudentIds.size;
+
+      if (selectedStudentIds.size === 0) {
+        pillsContainer.innerHTML = '<span class="text-xs text-slate-400 italic">Chưa chọn học sinh nào bên dưới...</span>';
+        return;
+      }
+
+      pillsContainer.innerHTML = '';
+      const selectedList = appConfig.students.filter(s => selectedStudentIds.has(s.id));
+      selectedList.forEach(s => {
+        const pill = document.createElement('span');
+        pill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200';
+        pill.innerHTML = `
+          <span>${s.name} <span class="opacity-60 text-[10px]">(#${s.stt})</span></span>
+          <button type="button" class="text-blue-500 hover:text-red-600 font-bold" onclick="toggleSelectStudent('${s.id}')">✕</button>
+        `;
+        pillsContainer.appendChild(pill);
+      });
+    }
+
+    // Build Formatted Message
+    function getGeneratedMessage() {
+      const dateVal = document.getElementById('reportDate').value;
+      const periodVal = document.getElementById('reportPeriod').value;
+      const subjectVal = document.getElementById('reportSubject').value.trim();
+      const customNote = document.getElementById('customNoteInput').value.trim();
+
+      let dateFormatted = dateVal;
+      try {
+        const [y, m, d] = dateVal.split('-');
+        const dateObj = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+        const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+        dateFormatted = `${days[dateObj.getDay()] || ''}, ngày ${d}/${m}/${y}`;
+      } catch (e) {}
+
+      const timeDetails = subjectVal ? `${periodVal} (Môn: ${subjectVal})` : periodVal;
+
+      let title = '📋 BÁO CÁO NỀ NẾP & CHUYÊN CẦN';
+      let category = '';
+
+      if (currentReportType === 'ABSENT') {
+        title = '🚨 BÁO CÁO HỌC SINH VẮNG HỌC';
+        if (currentAbsentSubtype === 'EXCUSED') category = 'Vắng CÓ PHÉP';
+        else if (currentAbsentSubtype === 'UNEXCUSED') category = 'Vắng KHÔNG PHÉP';
+        else if (currentAbsentSubtype === 'LATE') category = 'Đi học muộn';
+        else if (currentAbsentSubtype === 'TRUANT') category = 'Bỏ tiết giữa giờ';
+      } else {
+        title = '⚠️ BÁO CÁO VI PHẠM NỘI QUY LỚP';
+        category = 'Vi phạm nội quy';
+      }
+
+      const selectedList = appConfig.students.filter(s => selectedStudentIds.has(s.id));
+      const studentText = selectedList.length > 0
+        ? selectedList.map((s, idx) => `  ${idx + 1}. [STT ${s.stt}] ${s.name}`).join('\n')
+        : '  (⚠️ Chưa chọn học sinh nào)';
+
+      const reasons = [];
+      if (currentReportType === 'VIOLATION' && selectedViolationTags.length > 0) {
+        selectedViolationTags.forEach(t => reasons.push(`  • ${t}`));
+      }
+      if (customNote) {
+        reasons.push(`  • Ghi chú: ${customNote}`);
+      }
+
+      const reporterStr = appConfig.reporterName 
+        ? `${appConfig.reporterName} (${appConfig.reporterRole || 'Ban cán sự'})`
+        : (appConfig.reporterRole || 'Ban cán sự lớp');
+
+      const lines = [
+        '━━━━━━━━━━━━━━━━━━━━━━━',
+        title,
+        `🏫 Trường: ${appConfig.schoolName || 'Chưa cấu hình'}`,
+        `🏷️ Lớp: ${appConfig.className || 'Chưa cấu hình'}`,
+        `📅 Thời gian: ${dateFormatted} - ${timeDetails}`,
+        `👤 Người báo cáo: ${reporterStr}`,
+        '━━━━━━━━━━━━━━━━━━━━━━━',
+        `Kính gửi Thầy/Cô GVCN: ${appConfig.teacherName || 'GVCN'}`,
+        '',
+        `📌 PHÂN LOẠI: ${category}`,
+        `👥 DANH SÁCH HỌC SINH (${selectedList.length} bạn):`,
+        studentText
+      ];
+
+      if (reasons.length > 0) {
+        lines.push('');
+        lines.push('📝 CHI TIẾT NỘI DUNG:');
+        lines.push(reasons.join('\n'));
+      }
+
+      return lines.join('\n');
+    }
+
+    function updatePreview() {
+      const msg = getGeneratedMessage();
+      document.getElementById('messagePreviewArea').innerText = msg;
+    }
+
+    // ACTIONS
+    function showToast(msg, icon = '✅') {
+      const toast = document.getElementById('toastNotification');
+      document.getElementById('toastMsg').innerText = msg;
+      document.getElementById('toastIcon').innerText = icon;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3500);
+    }
+
+    function copyMessageText() {
+      const msg = getGeneratedMessage();
+      navigator.clipboard.writeText(msg).then(() => {
+        showToast('Đã sao chép nội dung báo cáo vào Clipboard!', '📋');
+      }).catch(() => {
+        showToast('Lỗi khi sao chép. Vui lòng chọn và copy thủ công.', '❌');
+      });
+    }
+
+    function validateReport() {
+      if (selectedStudentIds.size === 0) {
+        showToast('Vui lòng chọn ít nhất một học sinh!', '⚠️');
+        return false;
+      }
+      if (currentReportType === 'VIOLATION' && selectedViolationTags.length === 0 && !document.getElementById('customNoteInput').value.trim()) {
+        showToast('Vui lòng chọn ít nhất 1 lỗi vi phạm hoặc nhập ghi chú!', '⚠️');
+        return false;
+      }
+      if (!appConfig.zaloPhone) {
+        showToast('Vui lòng vào Cấu hình lớp để nhập Số điện thoại Zalo của GVCN!', '⚠️');
+        toggleConfigModal(true);
+        return false;
+      }
+      return true;
+    }
+
+    function sendToZalo() {
+      if (!validateReport()) return;
+
+      const msg = getGeneratedMessage();
+      // Auto copy to clipboard for convenience
+      navigator.clipboard.writeText(msg).catch(() => {});
+
+      const phone = cleanPhone(appConfig.zaloPhone);
+      const zaloUrl = `https://zalo.me/${phone}`;
+
+      // Record to history
+      saveCurrentToHistory(msg);
+
+      showToast('Đã sao chép nội dung! Đang mở Zalo với GVCN...', '🚀');
+      setTimeout(() => {
+        window.open(zaloUrl, '_blank');
+      }, 300);
+    }
+
+    function saveCurrentToHistory(msg) {
+      const selectedList = appConfig.students.filter(s => selectedStudentIds.has(s.id));
+      const record = {
+        id: 'rec-' + Date.now(),
+        timestamp: Date.now(),
+        date: document.getElementById('reportDate').value,
+        period: document.getElementById('reportPeriod').value,
+        subject: document.getElementById('reportSubject').value,
+        type: currentReportType,
+        count: selectedList.length,
+        studentsStr: selectedList.map(s => s.name).join(', '),
+        msg: msg
+      };
+      historyRecords.unshift(record);
+      saveHistoryRecords(historyRecords);
+    }
+
+    function saveAndReset() {
+      if (!validateReport()) return;
+      const msg = getGeneratedMessage();
+      saveCurrentToHistory(msg);
+      showToast('Đã lưu báo cáo vào lịch sử!', '💾');
+
+      // Reset form
+      selectedStudentIds.clear();
+      selectedViolationTags = [];
+      document.getElementById('customNoteInput').value = '';
+      document.getElementById('reportSubject').value = '';
+      renderPopularSubjects();
+      renderStudents();
+      renderViolationChips();
+      updatePreview();
+    }
+
+    // MODAL CONFIG
+    function toggleConfigModal(show) {
+      const modal = document.getElementById('configModal');
+      if (show) {
+        document.getElementById('cfgSchool').value = appConfig.schoolName || '';
+        document.getElementById('cfgClass').value = appConfig.className || '';
+        document.getElementById('cfgTeacher').value = appConfig.teacherName || '';
+        document.getElementById('cfgPhone').value = appConfig.zaloPhone || '';
+        document.getElementById('cfgReporter').value = appConfig.reporterName || '';
+        document.getElementById('cfgRole').value = appConfig.reporterRole || '';
+        document.getElementById('cfgStudentsText').value = appConfig.students.map(s => `${s.stt}. ${s.name}`).join('\n');
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function loadSampleRoster() {
+      document.getElementById('cfgStudentsText').value = DEFAULT_CONFIG.students.map(s => `${s.stt}. ${s.name}`).join('\n');
+    }
+
+    function saveConfigFromModal() {
+      const schoolName = document.getElementById('cfgSchool').value.trim();
+      const className = document.getElementById('cfgClass').value.trim();
+      const teacherName = document.getElementById('cfgTeacher').value.trim();
+      const zaloPhone = document.getElementById('cfgPhone').value.trim();
+      const reporterName = document.getElementById('cfgReporter').value.trim();
+      const reporterRole = document.getElementById('cfgRole').value.trim();
+      const rawStudents = document.getElementById('cfgStudentsText').value.split('\n');
+
+      const parsedStudents = [];
+      rawStudents.forEach((line) => {
+        let clean = line.trim();
+        if (!clean) return;
+        // strip starting numbers like "1. ", "1/ ", "1 - "
+        clean = clean.replace(/^\d+[\.\-\/\:\)]\s*/, '');
+        if (clean) {
+          parsedStudents.push(clean);
+        }
+      });
+
+      if (parsedStudents.length === 0) {
+        showToast('Vui lòng nhập ít nhất một học sinh!', '⚠️');
+        return;
+      }
+
+      const updatedStudents = parsedStudents.map((name, i) => ({
+        id: 'std-' + (i + 1),
+        stt: i + 1,
+        name: name
+      }));
+
+      const newConfig = {
+        schoolName,
+        className,
+        teacherName,
+        zaloPhone,
+        reporterName,
+        reporterRole,
+        students: updatedStudents
+      };
+
+      saveConfig(newConfig);
+      toggleConfigModal(false);
+      showToast('Đã lưu cấu hình lớp thành công!', '✅');
+    }
+
+    // MODAL HISTORY
+    function toggleHistoryModal(show) {
+      const modal = document.getElementById('historyModal');
+      if (show) {
+        renderHistoryList();
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function renderHistoryList() {
+      const container = document.getElementById('historyListContainer');
+      if (historyRecords.length === 0) {
+        container.innerHTML = '<div class="py-8 text-center text-sm text-slate-400">Chưa có lịch sử báo cáo nào được lưu.</div>';
+        return;
+      }
+
+      container.innerHTML = '';
+      historyRecords.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = 'p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2';
+        const typeBadge = item.type === 'ABSENT' 
+          ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">Vắng học</span>'
+          : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">Vi phạm nội quy</span>';
+
+        div.innerHTML = `
+          <div class="flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              ${typeBadge}
+              <span class="font-bold text-slate-700">${item.date} - ${item.period}</span>
+            </div>
+            <span class="text-[11px] text-slate-400">${new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+          </div>
+          <div class="text-xs text-slate-600">
+            <strong>Học sinh (${item.count}):</strong> ${item.studentsStr}
+          </div>
+          <div class="flex justify-end gap-2 pt-1 border-t border-slate-200/60">
+            <button class="text-xs text-blue-600 hover:underline font-semibold" onclick="copyHistoryMsg(${idx})">📋 Sao chép lại</button>
+            <button class="text-xs text-red-500 hover:underline" onclick="deleteHistoryItem(${idx})">Xóa</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function copyHistoryMsg(idx) {
+      const item = historyRecords[idx];
+      if (item && item.msg) {
+        navigator.clipboard.writeText(item.msg).then(() => {
+          showToast('Đã sao chép lại nội dung báo cáo!', '📋');
+        });
+      }
+    }
+
+    function deleteHistoryItem(idx) {
+      historyRecords.splice(idx, 1);
+      saveHistoryRecords(historyRecords);
+      renderHistoryList();
+    }
+
+    function clearHistory() {
+      if (confirm('Bạn có chắc muốn xóa toàn bộ lịch sử báo cáo không?')) {
+        saveHistoryRecords([]);
+        renderHistoryList();
+        showToast('Đã xóa toàn bộ lịch sử.', '🗑️');
+      }
+    }
+  </script>
+</body>
+</html>

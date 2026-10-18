@@ -1,0 +1,108 @@
+import { ClassConfig } from '../types';
+
+export const INITIAL_STUDENTS = [
+  'Nguyễn An Bình',
+  'Trần Gia Bảo',
+  'Lê Phương Chi',
+  'Phạm Tiến Dũng',
+  'Hoàng Thùy Dương',
+  'Vũ Đình Đạt',
+  'Đặng Thúy Hằng',
+  'Bùi Minh Hiếu',
+  'Đỗ Khánh Huyền',
+  'Hồ Gia Huy',
+  'Ngô Tuấn Kiệt',
+  'Dương Nhật Linh',
+  'Lý Hoàng Long',
+  'Mai Trúc Mai',
+  'Đinh Văn Nam',
+  'Trịnh Thị Nga',
+  'Phan Thanh Phong',
+  'Võ Như Quỳnh',
+  'Lâm Quốc Sơn',
+  'Đào Bích Thảo',
+  'Trương Anh Thư',
+  'Cao Minh Trí',
+  'Lương Cẩm Tú',
+  'Tô Văn Tùng',
+  'Nguyễn Khắc Việt',
+  'Hà Bảo Yến',
+  'Nguyễn Trung Dũng',
+  'Lê Thị Hương',
+  'Trần Đức Minh',
+  'Phạm Quốc Khánh',
+  'Vũ Hoài An',
+  'Nguyễn Thu Trang',
+  'Hoàng Minh Quân',
+  'Đặng Ngọc Ánh',
+  'Bùi Quang Vinh',
+].map((name, index) => ({
+  id: `std-${index + 1}`,
+  stt: index + 1,
+  name,
+}));
+
+export const DEFAULT_CONFIG: ClassConfig = {
+  schoolName: 'THPT Chu Văn An',
+  className: '11A1',
+  teacherName: 'Thầy Phạm Hậu',
+  zaloPhone: '0988123456',
+  reporterName: 'Nguyễn Minh Tuấn',
+  reporterRole: 'Lớp trưởng',
+  students: INITIAL_STUDENTS,
+};
+
+export const COMMON_VIOLATIONS = [
+  'Không thuộc bài cũ',
+  'Không làm bài tập về nhà',
+  'Đi học muộn / Vào lớp trễ',
+  'Nói chuyện riêng / Mất trật tự',
+  'Không mặc đồng phục / Thiếu phù hiệu',
+  'Sử dụng điện thoại trong giờ học',
+  'Ăn quà vặt trong lớp',
+  'Ngủ gật trong giờ',
+  'Không mang sách vở / Dụng cụ học tập',
+  'Bỏ tiết / Trốn học giữa giờ',
+  'Làm việc riêng trong giờ học',
+  'Không sơ vin / Quần áo chưa chỉnh tề',
+];
+
+export const COMMON_COMMENDATIONS = [
+  'Hăng hái phát biểu xây dựng bài',
+  'Đạt điểm 10 kiểm tra miệng / 15 phút',
+  'Giải được bài tập khó môn học',
+  'Tích cực giúp đỡ bạn bè trong lớp',
+  'Trực nhật vệ sinh lớp sạch sẽ',
+  'Được giáo viên bộ môn khen ngợi',
+];
+
+export const PERIOD_OPTIONS = [
+  { value: 'Tiết 1', label: 'Tiết 1' },
+  { value: 'Tiết 2', label: 'Tiết 2' },
+  { value: 'Tiết 3', label: 'Tiết 3' },
+  { value: 'Tiết 4', label: 'Tiết 4' },
+  { value: 'Tiết 5', label: 'Tiết 5' },
+  { value: 'Buổi sáng', label: 'Buổi sáng' },
+  { value: 'Buổi chiều', label: 'Buổi chiều' },
+  { value: 'Cả ngày', label: 'Cả ngày' },
+];
+
+export const POPULAR_SUBJECTS = [
+  'Toán',
+  'Ngữ văn',
+  'Tiếng Anh',
+  'Vật lý',
+  'Hóa học',
+  'Sinh học',
+  'Lịch sử',
+  'Địa lý',
+  'Tin học',
+  'KTPL',
+  'GDQP',
+  'CNNN',
+  'CNCN',
+  'GDĐP',
+  'HĐTN',
+  'Thể dục',
+  'SH Lớp',
+];

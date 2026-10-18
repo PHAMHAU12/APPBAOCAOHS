@@ -1,0 +1,6 @@
+{
+  "name": "BÁO CÁO NỀ NẾP LỚP - PHẠM HẬU",
+  "description": "Ứng dụng hỗ trợ ban cán sự và giáo viên ghi nhận vắng học, vi phạm nề nếp và gửi báo cáo chuẩn hóa trực tiếp đến Zalo Giáo viên chủ nhiệm.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
